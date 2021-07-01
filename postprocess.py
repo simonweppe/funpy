@@ -7,6 +7,9 @@ import pandas as pd
 import xarray as xr
 
 def funwave_to_netcdf(flist, x, y, time, fpath, name):
+	""" Function that takes list of FUNWAVE-TVD text file output and 
+	creates a xarray data array and saves to a netcdf file
+	"""
 	var = np.zeros((len(time),len(y),len(x)))
 	for i in range(len(time)):
 		var_i = pd.read_csv(os.path.join(fdir,flist[i]), header=None, delim_whitespace=True)
@@ -19,6 +22,10 @@ def funwave_to_netcdf(flist, x, y, time, fpath, name):
 	dat.to_netcdf(fpath)
 
 def output2netcdf(fdir, savedir, dx, dy, dt, varname, nchunks=1):
+	""" Compiles list of FUNWAVE-TVD text file output for a given variable,
+	and uses funwave_to_netcdf to save output into a netcdf file. For file 
+	size concerns, output can be saved into N netcdf files, set by nchunks.
+	"""
 	## load depth file and get x, y dimensions 
 	depFile = os.path.join(fdir,'dep.out')
 	dep = np.loadtxt(depFile)
@@ -47,6 +54,10 @@ def output2netcdf(fdir, savedir, dx, dy, dt, varname, nchunks=1):
 		funwave_to_netcdf(flist, x, y, time, fpath, varname)
 
 def uv2vorticity(fdir, savefile = 'vorticity.nc', savemask = 'vorticity_mask.nc', ufile = 'u.nc', vfile = 'v.nc', maskfile = 'mask.nc'):
+	""" Takes compiled (netcdf) u and v velocity output from FUNWAVE-TVD and computes du/dy,
+	dv/dx, averages each to get them onto the same grid, and then computes the vorticity 
+	(dv/dx - du/dy) and saves to a netcdf file. The vorticity mask will also be saved.
+	"""
 	u_dat = xr.open_dataset(os.path.join(fdir, ufile))
 	# load time, x, y and compute dx, dy
 	time = u_dat.time.values
