@@ -6,7 +6,7 @@ import glob
 import pandas as pd 
 import xarray as xr
 
-def funwave_to_netcdf(flist, x, y, time, fpath, name):
+def funwave_to_netcdf(fdir, flist, x, y, time, fpath, name):
 	""" Function that takes list of FUNWAVE-TVD text file output and 
 	creates a xarray data array and saves to a netcdf file
 	"""
@@ -44,14 +44,14 @@ def output2netcdf(fdir, savedir, dx, dy, dt, varname, nchunks=1):
 			N = int(len(time)/nchunks)
 			s = slice(i*N, (i+1)*N)
 			fpath = os.path.join(savedir, '%s_%d.nc' % (varname, i))
-			funwave_to_netcdf(flist[s], x, y, time[s], fpath, varname)
+			funwave_to_netcdf(fdir, flist[s], x, y, time[s], fpath, varname)
 		if (i+1)*N < fnum - 1:
 			s = slice((i+1)*N, fnum)
 			fpath = os.path.join(savedir, '%s_%d.nc' % (varname, i+1))
-			funwave_to_netcdf(flist[s], x, y, time[s], fpath, varname)			
+			funwave_to_netcdf(fdir, flist[s], x, y, time[s], fpath, varname)			
 	else:
 		fpath = os.path.join(savedir, '%s.nc' % varname)
-		funwave_to_netcdf(flist, x, y, time, fpath, varname)
+		funwave_to_netcdf(fdir, flist, x, y, time, fpath, varname)
 
 def uv2vorticity(fdir, savefile = 'vorticity.nc', savemask = 'vorticity_mask.nc', ufile = 'u.nc', vfile = 'v.nc', maskfile = 'mask.nc'):
 	""" Takes compiled (netcdf) u and v velocity output from FUNWAVE-TVD and computes du/dy,
