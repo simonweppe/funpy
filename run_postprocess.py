@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import glob
 import pandas as pd 
 import xarray as xr
+import funpy.postprocess as fp 
 
 rundir = 'mono_test_ata'
 fdir = os.path.join('/data2','enuss','funwave_lab_setup',rundir,'output')
@@ -19,10 +20,10 @@ dx = 0.05
 dy = 0.1 
 dt = 0.2 
 
-output2netcdf(fdir, savedir, dx, dy, dt, 'eta')
-output2netcdf(fdir, savedir, dx, dy, dt, 'u')
-output2netcdf(fdir, savedir, dx, dy, dt, 'v')
-output2netcdf(fdir, savedir, dx, dy, dt, 'mask')
-output2netcdf(fdir, savedir, dx, dy, dt, 'nubrk')
+fp.output2netcdf(fdir, savedir, dx, dy, dt, 'eta')
+fp.output2netcdf(fdir, savedir, dx, dy, dt, 'u')
+fp.output2netcdf(fdir, savedir, dx, dy, dt, 'v')
+fp.output2netcdf(fdir, savedir, dx, dy, dt, 'mask')
+fp.output2netcdf(fdir, savedir, dx, dy, dt, 'nubrk')
 
-uv2vorticity(savedir)
+fp.uv2vorticity(savedir)
