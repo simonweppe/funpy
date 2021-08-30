@@ -6,9 +6,9 @@ import xarray as xr
 import numpy.ma as ma
 
 def load_masked_variable(fdir, var, varfile, mask, maskfile):
-	mask_ds = xr.open_dataset(os.path.join(fdir, maskfile))
+	mask_ds = xr.open_mfdataset(os.path.join(fdir, maskfile))
 	mask = mask_ds[mask].values
-	var_ds = xr.open_dataset(os.path.join(fdir, varfile))
+	var_ds = xr.open_mfdataset(os.path.join(fdir, varfile))
 	var = var_ds[var].values
 	x = np.asarray(var_ds.x)
 	y = np.asarray(var_ds.y)
