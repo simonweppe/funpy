@@ -13,7 +13,7 @@ def load_masked_variable(fdir, var, varfile, mask, maskfile):
 	x = np.asarray(var_ds.x)
 	y = np.asarray(var_ds.y)
 	var_masked = ma.masked_where(mask==0, var)
-	return var, x, y 
+	return var_masked, x, y 
 
 def compute_Hsig(eta, start, end):
 	return 4*np.nanstd(eta[start:end, :, :], axis=0)
