@@ -2,7 +2,7 @@ import os
 import numpy as np
 import re
 import pandas as pd
-from funpy.model_utils import compute_spec, compute_HSig_spectrally 
+from funpy.model_utils import compute_spec, compute_Hsig_spectrally 
 
 def find_pos(filepath, string):
 	file = open(filepath, 'r')
