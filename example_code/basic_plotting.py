@@ -10,17 +10,19 @@ import cmocean.cm as cmo
 plt.ion()
 plt.style.use('ggplot')
 
-rootdir = os.path.join('/data2','enuss','funwave_lab_setup','mono_test_ata','postprocessing')
-savedir = os.path.join(rootdir, 'plots')
+rootdir = os.path.join('/data2','enuss','funwave_lab_setup','direct_sponge_tests','postprocessing')
+savedir = os.path.join(rootdir, 'plots', 'input9')
+if not os.path.exists(savedir):
+	os.makedirs(savedir)
 
 depFile = os.path.join(rootdir, 'compiled_output','dep.out')
 dep = np.loadtxt(depFile)
 [n,m] = dep.shape
 
 ## load masked eta and compute Hs
-maskfile = os.path.join(rootdir, 'compiled_output', 'mask.nc')
-etafile = os.path.join(rootdir, 'compiled_output', 'eta.nc')
-eta, x, y = utils.load_masked_variable(os.path.join(rootdir, 'compiled_output'), 'eta', etafile, 'mask', maskfile)
+maskfile = os.path.join('mask.nc')
+etafile = os.path.join('eta.nc')
+eta, x, y = utils.load_masked_variable(os.path.join(rootdir, 'compiled_output', 'input9'), 'eta', etafile, 'mask', maskfile)
 Hs = utils.compute_Hsig(eta, 500, 1000)
 Hs_alongmean = np.nanmean(Hs, axis=0)
 Hs_alongstd = np.nanstd(Hs, axis=0)
@@ -39,15 +41,15 @@ ax.legend(loc='best')
 fig.savefig(os.path.join(savedir,'hsig_alongmean_wbathy.png'))
 
 ## load masked vorticity
-vortmaskfile = os.path.join(rootdir, 'compiled_output', 'vorticity_mask.nc')
-vortfile = os.path.join(rootdir, 'compiled_output', 'vorticity.nc')
-vort, x, y = utils.load_masked_variable(os.path.join(rootdir, 'compiled_output'), 'vorticity', vortfile, 'vorticity_mask', vortmaskfile)
+vortmaskfile = os.path.join('vorticity_mask.nc')
+vortfile = os.path.join('vorticity.nc')
+vort, x, y = utils.load_masked_variable(os.path.join(rootdir, 'compiled_output', 'input9'), 'vorticity', vortfile, 'vorticity_mask', vortmaskfile)
 [xx, yy] = np.meshgrid(x, y)
 
 ## plot planar plot of vorticity
 fig, ax = plt.subplots()
 p = ax.pcolormesh(xx, yy, vort[-1,:,:], cmap=cmo.curl)
-p.set_clim(-0.07, 0.07)
+p.set_clim(-0.03, 0.03)
 #ax.set_aspect('equal', 'box')
 fig.colorbar(p, ax=ax, label=r'$\zeta$ (s$^{-1}$)')
 ax.set_xlabel('Cross-Shore (m)')
@@ -55,9 +57,9 @@ ax.set_ylabel('Alongshore (m)')
 fig.savefig(os.path.join(savedir,'vorticity_snapshot.png'))
 
 ## load masked nubrk
-maskfile = os.path.join(rootdir, 'compiled_output', 'mask.nc')
-nubrkfile = os.path.join(rootdir, 'compiled_output', 'nubrk.nc')
-nubrk, x, y = utils.load_masked_variable(os.path.join(rootdir, 'compiled_output'), 'nubrk', nubrkfile, 'mask', maskfile)
+maskfile = os.path.join('mask.nc')
+nubrkfile = os.path.join('nubrk.nc')
+nubrk, x, y = utils.load_masked_variable(os.path.join(rootdir, 'compiled_output', 'input9'), 'nubrk', nubrkfile, 'mask', maskfile)
 [xx, yy] = np.meshgrid(x, y)
 
 ## plot planar plot of nubrk
