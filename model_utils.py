@@ -21,11 +21,11 @@ def model2lab(x):
 def compute_Hsig(eta, start, end):
 	return 4*np.nanstd(eta[start:end, :, :], axis=0)
 
-def compute_SSE_spec(eta, dt, WL=512, OL=256, n=1, axis=0):
-	freq, spec = welch(eta, fs=1/dt, window='hann', nperseg=WL, noverlap=OL, axis=axis)
+def compute_spec(var, dt, WL=512, OL=256, n=1, axis=0):
+	freq, spec = welch(var, fs=1/dt, window='hann', nperseg=WL, noverlap=OL, axis=axis)
 	return freq, spec
 
 def compute_Hsig_spectrally(freq, spec, fmin, fmax):
 	ind = np.where((freq>fmin)&(freq<fmax))[0]
-	Hs = 4*np.sqrt(np.sum(spec[ind], axis=0)*np.diff(freq)[0])
+	Hs = 4*np.sqrt(np.nansum(spec[ind], axis=0)*np.diff(freq)[0])
 	return Hs
