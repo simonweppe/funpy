@@ -5,6 +5,10 @@ import pandas as pd
 from funpy.model_utils import compute_spec, compute_Hsig_spectrally 
 import glob
 
+dat = np.loadtxt(os.path.join('/data2', 'enuss', 'TRC_cross-shore_profile.txt'), delimiter=',')
+labx = dat[:,1]
+labz = dat[:,0]-1.07
+
 def find_pos(filepath, string):
 	file = open(filepath, 'r')
 	flag = 0
