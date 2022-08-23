@@ -91,7 +91,7 @@ def load_array(filepath, random, trial):
 		ypos[i] = ypos_
 		eta.append(press_snl)
 		valid = np.where(np.isfinite(press_snl)==True)[0]
-		freq, spec = compute_spec(press_snl[valid], dt=time[1]-time[0], n = 2)
+		freq, spec = compute_spec(press_snl[valid], dt=time[1]-time[0], n = 20)
 		Hs[i] = compute_Hsig_spectrally(freq, spec, fmin=0.25, fmax=1.2)
 		time, u_, xpos_, ypos_, zpos_ = load_uv_insitu(u_flist[i])
 		time, v_, xpos_, ypos_, zpos_ = load_uv_insitu(v_flist[i])	
