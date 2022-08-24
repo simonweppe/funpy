@@ -51,7 +51,9 @@ def find_crests(var, x, y, threshold=0, connectivity=8, order=1, filtx=0.5, filt
 	var_bar = spatially_avg(var, x, y, order=order, filtx=filtx, filty=filty)
 	var_bin = binize_var(var_bar, threshold).astype(np.uint8)
 	num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(var_bin, connectivity=connectivity)
+	return var_bar, var_bin, num_labels, labels
 
+def calc_crestlen(x, y, num_labels, labels):
 	[xx, yy] = np.meshgrid(x, y)
 
 	crestend_max_x = np.zeros(num_labels)
@@ -81,5 +83,5 @@ def find_crests(var, x, y, threshold=0, connectivity=8, order=1, filtx=0.5, filt
 
 		crestlen[i] = crestlen_tmp
 
-	alonglen = crestend_max_y - crestend_min_y
-	return var_bar, var_bin, num_labels, labels, crest_x_avg, crest_y_unique, alonglen, crestlen
+	alonglen = crestend_max_y - crestend_min_y	
+	return crestend_min_x, crestend_max_x, crestend_min_y, crestend_max_y, alonglen, crestlen
