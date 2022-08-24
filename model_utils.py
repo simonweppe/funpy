@@ -82,4 +82,4 @@ def find_crests(var, x, y, threshold=0, connectivity=8, order=1, filtx=0.5, filt
 		crestlen[i] = crestlen_tmp
 
 	alonglen = crestend_max_y - crestend_min_y
-	return var_bar, var_bin, num_labels, labels, alonglen, crestlen
+	return var_bar, var_bin, num_labels, labels, crestend_min_x, crestend_max_x, crestend_min_y, crestend_max_y, alonglen, crestlen
