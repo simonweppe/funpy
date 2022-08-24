@@ -58,6 +58,7 @@ def find_crests(var, x, y, threshold=0, connectivity=8, order=1, filtx=0.5, filt
 	crestend_min_x = np.zeros(num_labels)
 	crestend_max_y = np.zeros(num_labels)
 	crestend_min_y = np.zeros(num_labels)
+	crestlen = np.zeros(num_labels)
 
 	for i in range(1,num_labels):
 		ind_x = np.where(labels==i)[0]
@@ -69,5 +70,16 @@ def find_crests(var, x, y, threshold=0, connectivity=8, order=1, filtx=0.5, filt
 		crestend_max_x[i] = crest_x[np.argmax(crest_y)]
 		crestend_min_x[i] = crest_x[np.argmin(crest_y)]
 
-	crestlen = crestend_max_y - crestend_min_y
-	return var_bar, var_bin, num_labels, labels, crestend_min_x, crestend_max_x, crestend_min_y, crestend_max_y, crestlen
+		crest_y_unique = np.unique(crest_y)
+		crest_x_avg = np.zeros(len(crest_y_unique))
+		crestlen_tmp = 0
+		for j in range(len(crest_y_unique)):
+			ind = np.where(crest_y == crest_y_unique[j])[0]
+			crest_x_avg[j] = np.mean(crest_x[ind])
+			if j>0:
+				crestlen_tmp += np.sqrt((crest_x_avg[j]-crest_x_avg[j-1])**2 + (crest_y_unique[j]-crest_y_unique[j-1])**2)
+
+		crestlen[i] = crestlen_tmp
+
+	alonglen = crestend_max_y - crestend_min_y
+	return var_bar, var_bin, num_labels, labels, alonglen, crestlen
