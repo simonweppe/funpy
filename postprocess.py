@@ -101,7 +101,7 @@ def uv2vorticity(fdir, savefile = 'vorticity.nc', savemask = 'vorticity_mask.nc'
 def compute_fbr(vel, name, fdir, nufile='nubrk.nc', etafile='eta.nc', depfile='dep.out', dx=0.05, dy=0.1, dt=0.2):
 	nubrk_dat = xr.open_dataset(os.path.join(fdir, nufile))
 	eta_dat = xr.open_dataset(os.path.join(fdir, etafile))
-	dep = np.loadtxt(depfile)
+	dep = np.loadtxt(os.path.join(fdir, depfile))
 	nubrk = nubrk_dat['nubrk']
 	eta = eta_dat['eta']
 	x = eta_dat['x']
