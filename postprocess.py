@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import glob
 import pandas as pd 
 import xarray as xr
+import funpy.model_utils as mod_utils
 
 def funwave_to_netcdf(fdir, flist, x, y, time, fpath, name):
 	""" Function that takes list of FUNWAVE-TVD text file output and 
