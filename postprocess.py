@@ -126,6 +126,24 @@ def compute_fbr(vel, name, fdir, nufile='nubrk.nc', etafile='eta.nc', depfile='d
 	coords = [np.linspace(0,T*dt,T), y, x]
 	dat = xr.DataArray(fbr, coords=coords, dims=dim, name=name)
 	dat.to_netcdf(os.path.join(fdir, name + '.nc'))
-	return fbr
+
+def crest_identification(fdir, nufile='nubrk.nc', threshold=0, dt=0.2):
+	nubrk_dat = xr.open_dataset(os.path.join(fdir, nufile))
+	nubrk = nubrk_dat['nubrk']
+	x = nubrk_dat['x']
+	y = nubrk_dat['y']
+
+	T = len(nubrk)
+	for t in range(T):
+		nubrk_bar, nubin, num_labels, labels = mod_utils.find_crests(nubrk[t,:,:], x, y, threshold=threshold)
+		if t == 0:
+			labels_total = np.expand_dims(labels, axis = 0)
+		else:
+			labels_total = np.concatenate((labels_total, np.expand_dims(labels, axis=0)), axis=0)
+
+	dim = ["time", "y", "x"]
+	coords = [np.linspace(0,T*dt,T), y, x]
+	dat = xr.DataArray(labels_total, coords=coords, dims=dim, name='labels')
+	dat.to_netcdf(os.path.join(fdir, 'crests.nc'))
 
 
