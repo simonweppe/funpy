@@ -28,8 +28,8 @@ fp.output2netcdf(fdir, savedir, dx, dy, dt, 'nubrk')
 
 fp.uv2vorticity(savedir)
 
-u = xr.open_dataset(fdir, 'u.nc')['u']
-v = xr.open_dataset(fdir, 'v.nc')['v']
+u = xr.open_dataset(os.path.join(fdir, 'u.nc'))['u']
+v = xr.open_dataset(os.path.join(fdir, 'v.nc'))['v']
 
 fp.compute_fbr(u, 'fbrx', fdir)
 fp.compute_fbr(v, 'fbry', fdir)
