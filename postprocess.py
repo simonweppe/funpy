@@ -98,6 +98,34 @@ def uv2vorticity(fdir, savefile = 'vorticity.nc', savemask = 'vorticity_mask.nc'
 	mask_dat = xr.DataArray(vorticity_mask, coords=coords, dims=dim, name='vorticity_mask')
 	mask_dat.to_netcdf(os.path.join(fdir, savemask))
 
+def compute_fbr(vel, name, fdir, nufile='nubrk.nc', etafile='eta.nc', depfile='dep.out', dx=0.05, dy=0.1, dt=0.2):
+	nubrk_dat = xr.open_dataset(os.path.join(fdir, nufile))
+	eta_dat = xr.open_dataset(os.path.join(fdir, etafile))
+	dep = np.loadtxt(depfile)
+	nubrk = nubrk_dat['nubrk']
+	eta = eta_dat['eta']
+	x = eta_dat['x']
+	y = eta_dat['y']
 
+	dudx = np.gradient(vel, dx, axis=2)
+	dudy = np.gradient(vel, dy, axis=1)
+	heta = np.asarray([dep + eta[i,:,:] for i in range(len(eta))])
+
+	term1 = nubrk * heta * dudx 
+	term2 = nubrk * heta * dudy
+
+	del vel, eta, nubrk, dep 
+
+	term1dx = np.gradient(term1, dx, axis=2)
+	term2dy = np.gradient(term2, dy, axis=1)
+
+	fbr = 1/heta * (term1dx + term2dy)	
+
+	T = len(fbr)
+	dim = ["time", "y", "x"]
+	coords = [np.linspace(0,T*dt,T), y, x]
+	dat = xr.DataArray(fbr, coords=coords, dims=dim, name=name)
+	dat.to_netcdf(os.path.join(fdir, name + '.nc'))
+	return fbr
 
 
