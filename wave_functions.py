@@ -1,0 +1,120 @@
+#!/usr/bin/env python
+import numpy as np 
+from scipy.signal import welch, hanning
+
+def calculate_spectra(pressure, WL=128, OL=64, fsamp=1):
+	freq, Pxxf = welch(pressure, fs = fsamp, window = 'hann', nperseg = WL, noverlap = OL)
+	return freq, Pxxf
+
+def wave_type(depth, wavelength):
+	if depth/wavelength<1/20:
+		wtype = 'shallow'
+	elif depth/wavelength>1/2:
+		wtype = 'deep'
+	else:
+		wtype = 'intermediate'
+	return wtype
+
+
+def wavenumber(f, depth, g=9.81, wtype='intermediate'):
+	""" input frequency (Hz) and depth (m)
+		converted from Jim Thompsons wavelength.m
+	"""
+	omega = 2*np.pi*f 
+	depthR = np.round(depth, decimals=1)
+	if wtype=='intermediate':
+		if depth<20: #shallow
+			guess_k = np.sqrt(omega**2/(g*depthR))
+			eps = 0.01*guess_k 
+			err = np.abs(omega**2 - g*guess_k*np.tanh(guess_k*depthR))
+		else:
+			guess_k = omega**2/g
+			eps = 0.01*guess_k
+			err = np.abs(omega**2 - g*guess_k*np.tanh(guess_k*depthR))
+		k = guess_k
+		while err>eps:
+			k = guess_k - (omega**2 - g*guess_k*np.tanh(guess_k*depthR))/(-g*np.tanh(guess_k*depthR) - g*guess_k*depthR*np.cosh(guess_k)**2)
+			err = np.abs(omega**2 - g*k*np.tanh(k*depthR))
+			guess_k = k
+	if wtype=='deep':
+		k = omega**2/g 
+	if wtype=='shallow':
+		k = omega/np.sqrt(g*depth)
+	return k
+
+def wavelength(k):
+	return 2*np.pi/k
+
+def displacement(amplitude, k, omega, depth, g=9.81):
+	d = amplitude*g*k/omega**2
+	return d, d*np.tanh(k*depth)
+
+def pressure(amplitude, k, depth, rho=1000, g=9.81):
+	return rho*g*amplitude*(1/np.cosh(k*depth))
+
+def energy_density(amplitude, rho=1000, g=9.81):
+	return 1/16*rho*g*(2*amplitude)**2
+
+def group_speed(L, period, depth):
+	k = 2*np.pi/L
+	return L/period*(0.5+k*depth/np.sinh(2*k*depth))
+
+def energy_flux(energy_density, cg):
+	return energy_density*cg
+
+def ursel(L, amplitude, depth):
+	return L**2*2*amplitude/depth**3
+
+def phase_speed(omega, k, d, g=9.81):
+	return g/omega*np.tanh(k*d)
+
+def stokes_drift(amplitude, L, c, depth):
+	k = 2*np.pi/L
+	return (np.pi*2*amplitude/L)**2*(c/2)*(np.cosh(2*k*depth)/np.sinh(k*depth)**2)
+
+def x_hat(X, U, g=9.81):
+	return g*X/U**2
+
+def h_hat(H, U, g=9.81):
+	return g*H/U**2
+
+def t_hat(period, U, g=9.81):
+	return g*period/U
+
+def duration_limited_time(X, U, g=9.81):
+	return 77.23*X**0.67/(U**0.34*g**0.33)
+
+def fetch_limited_h_hat(x_hat):
+	return 0.002*x_hat**0.5
+
+def fetch_limited_t_hat(x_hat):
+	return 0.25*x_hat**(1/3)
+
+def spectral_Hs(spec, freq):
+	return 4*np.sqrt(np.sum(spec*(freq[1]-freq[0])))
+
+def spectral_Tp(spec, freq):
+	num = np.sum(spec*(freq[1]-freq[0]))
+	dnom = np.sum(np.dot(spec*(freq[1]-freq[0]), freq))
+	return num/dnom 
+
+def surf_similarity(H0, L0, slope):
+	return slope*(H0/L0)**-0.5
+
+def breaker_type(zeta0):
+	if zeta0<0.5:
+		btype = 'spilling'
+	elif zeta0>3.3:
+		btype = 'collapsing & surging'
+	else:
+		btype = 'plunging'
+	return btype
+
+def Ks(cg0, cg):
+	return np.sqrt(cg0/cg)
+
+def Kr(alpha0, alpha):
+	return np.sqrt(np.cos(alpha0)/np.cos(alpha))
+
+def H_shoaling(Ks, Kr, H0):
+	return H0*Ks*Kr 
