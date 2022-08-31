@@ -78,7 +78,8 @@ def load_array(filepath, random, trial):
 	u = []
 	v = []
 
-	for i in range(len(press_flist)):
+	I = np.min((len(press_flist), len(u_flist), len(v_flist)))
+	for i in range(I):
 		time, press_, xpos_, ypos_, zpos_ = load_press_insitu(press_flist[i])
 		h0 = find_depth(xpos_, labx, -labz)
 		dt = time[1]-time[0]

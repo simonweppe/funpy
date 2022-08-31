@@ -128,8 +128,8 @@ def compute_fbr(vel, name, fdir, nufile='nubrk.nc', etafile='eta.nc', depfile='d
 	dat = xr.DataArray(fbr, coords=coords, dims=dim, name=name)
 	dat.to_netcdf(os.path.join(fdir, name + '.nc'))
 
-def crest_identification(fdir, nufile='nubrk.nc', threshold=0, dt=0.2):
-	x, y, nubrk = mod_utils.load_var_lab(fdir, 'nubrk', 'nubrk.nc', 'mask', 'mask.nc')
+def crest_identification(fdir, nufile='nubrk.nc', maskfile='mask.nc', threshold=0, dt=0.2):
+	x, y, nubrk = mod_utils.load_var_lab(fdir, 'nubrk', nufile, 'mask', maskfile)
 
 	T = len(nubrk)
 	for t in range(T):
