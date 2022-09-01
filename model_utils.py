@@ -53,7 +53,7 @@ def find_crests(var, x, y, threshold=0, connectivity=8, order=1, filtx=0.5, filt
 	num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(var_bin, connectivity=connectivity)
 	return var_bar, var_bin, num_labels, labels
 
-def calc_crestlen(x, y, num_labels, labels):
+def calc_crestlen_fbr(x, y, num_labels, labels, fbr):
 	[xx, yy] = np.meshgrid(x, y)
 
 	crestend_max_x = np.zeros(num_labels)
@@ -61,6 +61,7 @@ def calc_crestlen(x, y, num_labels, labels):
 	crestend_max_y = np.zeros(num_labels)
 	crestend_min_y = np.zeros(num_labels)
 	crestlen = np.zeros(num_labels)
+	crest_fbr = np.zeros(num)
 
 	for i in range(1,num_labels):
 		ind_x = np.where(labels==i)[0]
@@ -71,7 +72,8 @@ def calc_crestlen(x, y, num_labels, labels):
 		crestend_min_y[i] = np.min(crest_y)
 		crestend_max_x[i] = crest_x[np.argmax(crest_y)]
 		crestend_min_x[i] = crest_x[np.argmin(crest_y)]
-
+		
+		crest_fbr[i] = np.sum(fbr[ind_x, ind_y])
 		crest_y_unique = np.unique(crest_y)
 		crest_x_avg = np.zeros(len(crest_y_unique))
 		crestlen_tmp = 0
@@ -84,4 +86,4 @@ def calc_crestlen(x, y, num_labels, labels):
 		crestlen[i] = crestlen_tmp
 
 	alonglen = crestend_max_y - crestend_min_y	
-	return crestend_min_x, crestend_max_x, crestend_min_y, crestend_max_y, alonglen, crestlen
+	return crestend_min_x, crestend_max_x, crestend_min_y, crestend_max_y, alonglen, crestlen, crest_fbr
