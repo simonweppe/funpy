@@ -61,7 +61,7 @@ def calc_crestlen_fbr(x, y, num_labels, labels, fbr):
 	crestend_max_y = np.zeros(num_labels)
 	crestend_min_y = np.zeros(num_labels)
 	crestlen = np.zeros(num_labels)
-	crest_fbr = np.zeros(num)
+	crest_fbr = np.zeros(num_labels)
 
 	for i in range(1,num_labels):
 		ind_x = np.where(labels==i)[0]
