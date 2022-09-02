@@ -61,7 +61,9 @@ def calc_crestlen_fbr(x, y, num_labels, labels, fbr):
 	crestend_max_y = np.zeros(num_labels)
 	crestend_min_y = np.zeros(num_labels)
 	crestlen = np.zeros(num_labels)
-	crest_fbr = np.zeros(num_labels)
+	crest_fbr_std = np.zeros(num_labels)
+	crest_fbr_abs = np.zeros(num_labels)
+	crest_fbr_sq = np.zeros(num_labels)
 
 	for i in range(1,num_labels):
 		ind_x = np.where(labels==i)[0]
@@ -73,7 +75,9 @@ def calc_crestlen_fbr(x, y, num_labels, labels, fbr):
 		crestend_max_x[i] = crest_x[np.argmax(crest_y)]
 		crestend_min_x[i] = crest_x[np.argmin(crest_y)]
 		
-		crest_fbr[i] = np.sum(fbr[ind_x, ind_y])
+		crest_fbr_std[i] = np.std(fbr[ind_x, ind_y])
+		crest_fbr_abs[i] = np.sum(np.abs(fbr[ind_x, ind_y]))
+		crest_fbr_sq[i] = np.sum(fbr[ind_x, ind_y]**2)
 		crest_y_unique = np.unique(crest_y)
 		crest_x_avg = np.zeros(len(crest_y_unique))
 		crestlen_tmp = 0
@@ -86,4 +90,4 @@ def calc_crestlen_fbr(x, y, num_labels, labels, fbr):
 		crestlen[i] = crestlen_tmp
 
 	alonglen = crestend_max_y - crestend_min_y	
-	return crestend_min_x, crestend_max_x, crestend_min_y, crestend_max_y, alonglen, crestlen, crest_fbr
+	return crestend_min_x, crestend_max_x, crestend_min_y, crestend_max_y, alonglen, crestlen, crest_fbr_std, crest_fbr_abs, crest_fbr_sq
