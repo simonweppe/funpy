@@ -99,7 +99,7 @@ def uv2vorticity(fdir, savefile = 'vorticity.nc', savemask = 'vorticity_mask.nc'
 	mask_dat = xr.DataArray(vorticity_mask, coords=coords, dims=dim, name='vorticity_mask')
 	mask_dat.to_netcdf(os.path.join(fdir, savemask))
 
-def compute_fbr(vel, name, fdir, nufile='nubrk.nc', etafile='eta.nc', depfile='dep.out', dx=0.05, dy=0.1, dt=0.2):
+def compute_fbr(vel, name, fdir, savefile='fbr.nc', nufile='nubrk.nc', etafile='eta.nc', depfile='dep.out', dx=0.05, dy=0.1, dt=0.2):
 	nubrk_dat = xr.open_dataset(os.path.join(fdir, nufile))
 	eta_dat = xr.open_dataset(os.path.join(fdir, etafile))
 	dep = np.loadtxt(os.path.join(fdir, depfile))
@@ -126,7 +126,7 @@ def compute_fbr(vel, name, fdir, nufile='nubrk.nc', etafile='eta.nc', depfile='d
 	dim = ["time", "y", "x"]
 	coords = [np.linspace(0,T*dt,T), y, x]
 	dat = xr.DataArray(fbr, coords=coords, dims=dim, name=name)
-	dat.to_netcdf(os.path.join(fdir, name + '.nc'))
+	dat.to_netcdf(os.path.join(fdir, savefile))
 
 def crest_identification(fdir, nufile='nubrk.nc', maskfile='mask.nc', threshold=0, dt=0.2):
 	x, y, nubrk = mod_utils.load_var_lab(fdir, 'nubrk', nufile, 'mask', maskfile)
