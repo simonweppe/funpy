@@ -128,7 +128,7 @@ def compute_fbr(vel, name, fdir, savefile='fbr.nc', nufile='nubrk.nc', etafile='
 	dat = xr.DataArray(fbr, coords=coords, dims=dim, name=name)
 	dat.to_netcdf(os.path.join(fdir, savefile))
 
-def crest_identification(fdir, nufile='nubrk.nc', maskfile='mask.nc', threshold=0, dt=0.2):
+def crest_identification(fdir, nufile='nubrk.nc', maskfile='mask.nc', savefile='crest.nc', threshold=0, dt=0.2):
 	x, y, nubrk = mod_utils.load_var_lab(fdir, 'nubrk', nufile, 'mask', maskfile)
 
 	T = len(nubrk)
@@ -142,6 +142,6 @@ def crest_identification(fdir, nufile='nubrk.nc', maskfile='mask.nc', threshold=
 	dim = ["time", "y", "x"]
 	coords = [np.linspace(0,T*dt,T), y, x]
 	dat = xr.DataArray(labels_total, coords=coords, dims=dim, name='labels')
-	dat.to_netcdf(os.path.join(fdir, 'crests.nc'))
+	dat.to_netcdf(os.path.join(fdir, savefile))
 
 
