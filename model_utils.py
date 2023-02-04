@@ -10,11 +10,11 @@ import cv2
 
 def load_masked_variable(fdir, var, varfile, mask, maskfile):
 	mask_ds = xr.open_mfdataset(os.path.join(fdir, maskfile))
-	var_ds = xr.open_mfdataset(os.path.join(fdir, varfile))
-	x = np.asarray(var_ds.x)
-	y = np.asarray(var_ds.y)
-	var_unmasked = np.asarray(var_ds[var])
-	var_masked = ma.masked_where(mask_ds[mask].values==0, var_unmasked)
+	var_unmasked = np.asarray(xr.open_mfdataset(os.path.join(fdir, ufile))[var])
+	x = np.asarray(xr.open_dataset(os.path.join(fdir, ufile))['x'])
+	y = np.asarray(xr.open_dataset(os.path.join(fdir, ufile))['y'])
+	mask = np.asarray(mask_ds[mask])
+	var_masked = ma.masked_where(mask==0, var_unmasked)
 	return var_masked, x, y 
 
 def model2lab(x):
