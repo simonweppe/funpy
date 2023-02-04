@@ -13,7 +13,8 @@ def load_masked_variable(fdir, var, varfile, mask, maskfile):
 	var_ds = xr.open_mfdataset(os.path.join(fdir, varfile))
 	x = np.asarray(var_ds.x)
 	y = np.asarray(var_ds.y)
-	var_masked = ma.masked_where(mask_ds[mask].values==0, var_ds[var].values)
+	var_unmasked = np.asarray(var_ds[var])
+	var_masked = ma.masked_where(mask_ds[mask].values==0, var_unmasked)
 	return var_masked, x, y 
 
 def model2lab(x):
