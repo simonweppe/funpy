@@ -91,3 +91,100 @@ def calc_crestlen_fbr(x, y, num_labels, labels, fbr):
 
 	alonglen = crestend_max_y - crestend_min_y	
 	return crestend_min_x, crestend_max_x, crestend_min_y, crestend_max_y, alonglen, crestlen, crest_fbr_std, crest_fbr_abs, crest_fbr_sq
+
+def tridiag(alpha, beta, gamma, b):
+	# Solve the tridiagonal system Ax=b, alpha is below 
+	# the diagonal, beta is the diagonal, and gamma is 
+	# above the diagonal
+
+	N = len(b[0,:])
+
+	# perform forward elimination 
+	for i in range(1,N):
+		coeff = alpha[i-1]/beta[i-1]
+		beta[i] = beta[i] - coeff*gamma[i-1]
+		b[:,i] = b[:,i] - coeff*b[:,i-1]
+
+	# perform back substitution
+	x2 = np.zeros(b.shape, dtype=complex)
+	x2[:,N-1] = b[:,N-1]/beta[N-1]
+	for i in range(N-2,-1,-1):
+		x2[:,i] = (b[:,i] - np.expand_dims(gamma[i], axis=0)*x2[:,i+1])/beta[i]
+
+	return x2
+
+def vel_decomposition(u, v, dx, dy):
+	""" Velocity decomposition function that returns the 
+	    velocity stream function (psi) and velocity 
+	    potential (phi) given a velocity field. With zero
+	    velocity on the x boundary (assumption). The 
+	    equation being solved here is of the form:
+	    ui^ + vj^ = div(phi) + curl(psi)
+
+	    This function is rewritten from Dr. Matthew Spydell's 
+	    matlab function in the funwaveC toolbox 
+	"""
+	### set up dimenional values
+	[ny, nx] = u[0,:,:].shape
+	Ly = ny*dy
+	Lx = nx*dx
+
+	### take spatial derivatives 
+	ux = np.gradient(u, dx, axis=2)
+	uy = np.gradient(u, dy, axis=1)
+	vx = np.gradient(v, dx, axis=2)
+	vy = np.gradient(v, dy, axis=1)
+	vbar = np.mean(np.mean(v, axis=-1), axis=-1)
+	ubar = np.mean(np.mean(u, axis=-1), axis=-1)
+	psi_at_lx = vbar*Lx 
+	phi_at_lx = ubar*Lx 
+	del u, v 
+
+	divu = ux + vy ## forcing for the velocity potential 
+	divu[:,:,-1] = divu[:,:,-1] - np.expand_dims(phi_at_lx, axis=-1)/dx**2
+	curlu = vx - uy ## forcing for the streamfunction 
+	curlu[:,:,-1] = curlu[:,:,-1] - np.expand_dims(psi_at_lx, axis=-1)/dx**2
+	del ux, uy, vx, vy 
+
+	### solve Laplaces's equation using fft in y
+	un_diag = 1/dx**2 
+	alpha = un_diag*np.ones(nx)
+	on_diag = -2/dx**2 
+	beta = on_diag*np.ones(nx)
+	beta_noflux = beta.copy() 
+	beta_noflux[-1] = 2/dx**2
+	ov_diag = 1/dx**2
+	gamma = alpha.copy() 
+	gamma_noflux = gamma.copy()
+	gamma_noflux[0] = 2/dx**2 
+
+	Gpsi = np.fft.fftshift(np.fft.fftn(curlu, axes=[1]), axes=[1])
+	Gphi = np.fft.fftshift(np.fft.fftn(divu, axes=[1]), axes=[1])
+
+	kpos = np.arange(0, ny/2)
+	kneg = np.arange(-ny/2, 0)
+	N = np.fft.fftshift(np.append(kpos, kneg))
+
+	Xpsi = np.zeros(Gpsi.shape, dtype=complex)
+	Xphi = np.zeros(Gphi.shape, dtype=complex)
+
+	for a in range(ny):
+		c = -4*np.pi**2*N[a]**2/Ly**2
+		g = Gpsi[:,a,:]
+		Xpsi[:,a,:] = tridiag(alpha, beta+c, gamma, g)
+		g = Gphi[:,a,:]
+		Xphi[:,a,:] = tridiag(alpha, beta+c, gamma_noflux, g)
+
+	psi0 = np.fft.ifft(np.fft.ifftshift(Xpsi, axes=[1]), axis=1)
+	u_psi = -np.gradient(psi0.real, dy, axis=1)
+	u_psi = np.append(np.expand_dims(u_psi[:,-1,:], axis=1), u_psi[:,:-1,:], axis=1)
+	psi = u_psi.copy()
+	psi[:,:,0] = np.zeros(psi[:,:,0].shape)
+	psi[:,:,-1] = np.ones(psi[:,:,-1].shape)*np.expand_dims(psi_at_lx, axis=-1)
+	v_psi = np.gradient(psi.real, dx, axis=2)
+
+	phi = np.fft.ifft(np.fft.fftshift(Xphi, axes=[1]), axis=1)
+	phi[:,:,-1] = np.ones(phi[:,:,-1].shape)*np.expand_dims(phi_at_lx, axis=-1)
+	u_phi = np.gradient(phi.real, dx, axis=2)
+	v_phi = np.gradient(phi.real, dy, axis=1)
+	return psi, u_psi, v_psi, phi, u_phi, v_phi 
