@@ -17,6 +17,10 @@ def funwave_to_netcdf(fdir, flist, x, y, time, fpath, name):
 		var_i = np.asarray(var_i)
 		var[i,:,:] = var_i
 		del var_i
+	var_to_netcdf(var, x, y, time[1]-time[0], name, fpath)
+
+def var_to_netcdf(var, x, y, dt, name, fpath):
+	time = np.linspace(0, len(var)*dt, len(var))
 	dim = ["time", "y", "x"]
 	coords = [time, y, x]
 	dat = xr.DataArray(var, coords=coords, dims=dim, name=name)
