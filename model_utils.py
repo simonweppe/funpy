@@ -162,6 +162,8 @@ def vel_decomposition(u, v, dx, dy):
 	Gpsi = np.fft.fftshift(np.fft.fftn(curlu, axes=[1]), axes=[1])
 	Gphi = np.fft.fftshift(np.fft.fftn(divu, axes=[1]), axes=[1])
 
+	del curlu, divu
+
 	kpos = np.arange(0, ny/2)
 	kneg = np.arange(-ny/2, 0)
 	N = np.fft.fftshift(np.append(kpos, kneg))
@@ -183,8 +185,10 @@ def vel_decomposition(u, v, dx, dy):
 	psi[:,:,0] = np.zeros(psi[:,:,0].shape)
 	psi[:,:,-1] = np.ones(psi[:,:,-1].shape)*np.expand_dims(psi_at_lx, axis=-1)
 	v_psi = np.gradient(psi.real, dx, axis=2)
+	del Xpsi
 
 	phi = np.fft.ifft(np.fft.fftshift(Xphi, axes=[1]), axis=1)
+	del Xphi
 	phi[:,:,-1] = np.ones(phi[:,:,-1].shape)*np.expand_dims(phi_at_lx, axis=-1)
 	u_phi = np.gradient(phi.real, dx, axis=2)
 	v_phi = np.gradient(phi.real, dy, axis=1)
