@@ -28,7 +28,7 @@ def rms_calc(fdir):
 
 	xend = int(54/dx)
 
-	f.open(os.path.join(fdir, 'rms_u.txt'))
+	f = open(os.path.join(fdir, 'rms_u.txt'))
 	N = len(x[:xend])*len(y)
 
 	for t in range(len(u)):
@@ -48,7 +48,7 @@ def rms_calc(fdir):
 	v_rec = v_psi_dat['v_psi'] + u_phi_dat['v_phi']
 	v = v_dat['v']
 
-	f.open(os.path.join(fdir, 'rms_v.txt'))
+	f = open(os.path.join(fdir, 'rms_v.txt'))
 	N = len(x[:xend])*len(y)
 
 	for t in range(len(v)):
