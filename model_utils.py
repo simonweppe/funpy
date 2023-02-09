@@ -181,7 +181,7 @@ def vel_decomposition(u, v, dx, dy):
 	psi0 = np.fft.ifft(np.fft.ifftshift(Xpsi, axes=[1]), axis=1)
 	u_psi = -np.gradient(psi0.real, dy, axis=1)
 	u_psi = np.append(np.expand_dims(u_psi[:,-1,:], axis=1), u_psi[:,:-1,:], axis=1)
-	psi = u_psi.copy()
+	psi = psi0.copy()
 	psi[:,:,0] = np.zeros(psi[:,:,0].shape)
 	psi[:,:,-1] = np.ones(psi[:,:,-1].shape)*np.expand_dims(psi_at_lx, axis=-1)
 	v_psi = np.gradient(psi.real, dx, axis=2)
