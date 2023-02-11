@@ -23,8 +23,12 @@ def rms_calc(fdir):
 	x = u_dat['x']
 	y = u_dat['y']
 
-	u_rec = u_psi_dat['u_psi'] + u_phi_dat['u_phi']
-	u = u_dat['u']
+	u_psi = np.asarray(u_psi_dat['u_psi'])
+	u_phi = np.asarray(u_phi_dat['u_phi'])
+	del u_psi_dat, u_phi_dat
+	u_rec = u_psi + u_phi
+	del u_psi, u_phi
+	u = np.asarray(u_dat['u'])
 
 	xend = int(54/dx)
 
@@ -45,8 +49,12 @@ def rms_calc(fdir):
 	x = u_dat['x']
 	y = u_dat['y']
 
-	v_rec = v_psi_dat['v_psi'] + u_phi_dat['v_phi']
-	v = v_dat['v']
+	v_psi = np.asarray(v_psi_dat['v_psi'])
+	v_phi = np.asarray(v_phi_dat['v_phi'])
+	del v_psi_dat, v_phi_dat
+	v_rec = v_psi + v_phi
+	del v_psi, v_phi	
+	v = np.asarray(v_dat['v'])
 
 	f = open(os.path.join(fdir, 'rms_v.txt'), 'w')
 	N = len(x[:xend])*len(y)
