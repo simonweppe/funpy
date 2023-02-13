@@ -41,7 +41,7 @@ def rms_calc(fdir):
 		f.write('\n')
 	f.close()
 
-	del u_psi_dat, u_phi_dat, u_dat, u_rec, u
+	del u_dat, u_rec, u
 	v_psi_dat = xr.open_mfdataset(os.path.join(fdir, 'v_psi_*.nc'), combine='nested', concat_dim='time')
 	v_phi_dat = xr.open_mfdataset(os.path.join(fdir, 'v_phi_*.nc'), combine='nested', concat_dim='time')
 	v_dat = xr.open_mfdataset([os.path.join(fdir, 'v_0.nc'), os.path.join(fdir, 'v_1.nc'), os.path.join(fdir, 'v_2.nc'), os.path.join(fdir, 'v_3.nc')], combine='nested', concat_dim='time')
