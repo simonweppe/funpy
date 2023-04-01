@@ -114,16 +114,20 @@ def compute_fbr(vel, name, fdir, savefile='fbr.nc', nufile='nubrk.nc', etafile='
 
 	dudx = np.gradient(vel, dx, axis=2)
 	dudy = np.gradient(vel, dy, axis=1)
+	del vel 
+	
 	heta = np.asarray([dep + eta[i,:,:] for i in range(len(eta))])
+	del eta, dep
 
 	term1 = nubrk * heta * dudx 
 	term2 = nubrk * heta * dudy
 
-	del vel, eta, nubrk, dep 
+	del nubrk
 
 	term1dx = np.gradient(term1, dx, axis=2)
 	term2dy = np.gradient(term2, dy, axis=1)
-
+	del term1, term2
+	
 	fbr = 1/heta * (term1dx + term2dy)	
 
 	T = len(fbr)
