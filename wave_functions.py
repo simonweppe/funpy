@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import numpy as np 
-from scipy.signal import welch, hanning
+from scipy.signal import welch
 
 def calculate_spectra(pressure, WL=128, OL=64, fsamp=1):
 	freq, Pxxf = welch(pressure, fs = fsamp, window = 'hann', nperseg = WL, noverlap = OL)
