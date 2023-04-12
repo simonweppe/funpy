@@ -42,6 +42,7 @@ def output2netcdf(fdir, savedir, dx, dy, dt, varname, nchunks=1):
 
 	# output file list
 	flist = [file for file in glob.glob(os.path.join(fdir,'%s_*' % varname))]
+	flist = sorted(flist)
 	fnum = len(flist)
 	time = np.arange(0,fnum)*dt 
 	if nchunks>1:
