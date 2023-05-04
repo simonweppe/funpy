@@ -193,3 +193,74 @@ def vel_decomposition(u, v, dx, dy):
 	u_phi = np.gradient(phi.real, dx, axis=2)
 	v_phi = np.gradient(phi.real, dy, axis=1)
 	return psi, u_psi, v_psi, phi, u_phi, v_phi 
+
+def calculate_dirspread(eta, u, v, dt, lf, WL, OL):
+	# Estimation of Power and Cross Spectrum using FFT Analysis
+	f1, Cuu = csd(u, u, fs=1/dt, window='hann', nperseg=WL, noverlap=OL, axis=0)
+	f1, Cvv = csd(v, v, fs=1/dt, window='hann', nperseg=WL, noverlap=OL, axis=0)
+	f1, Cpp = csd(eta, eta, fs=1/dt, window='hann', nperseg=WL, noverlap=OL, axis=0)
+	f1, Cpu = csd(eta, u, fs=1/dt, window='hann', nperseg=WL, noverlap=OL, axis=0)
+	f1, Cpv = csd(eta, v, fs=1/dt, window='hann', nperseg=WL, noverlap=OL, axis=0)
+	f1, Cuv = csd(u, v, fs=1/dt, window='hann', nperseg=WL, noverlap=OL, axis=0)
+
+	# Conversion from Pressure/Velocty Spectrum to Wave Height Spectrum
+	ind = np.where(f1>lf)[0] # low freqeuncy cutoff
+	lF = len(ind) # number of frequencies we keep
+
+	# Remove values corresponding to frequencies lower than Lf
+	f1 = f1[ind]
+	Cuu = Cuu[ind,:]
+	Cvv = Cvv[ind,:]
+	Cpp = Cpp[ind,:]
+	Cpu = Cpu[ind,:]
+	Cpv = Cpv[ind,:]
+	Cuv = Cuv[ind,:]
+
+	# Spectra calculation
+	Su = Cuu+Cvv 
+	Sp = Cpp 
+
+	# Calculation of fourier coefficients from Herbers et al, 1999 JGR
+	A1 = Cpu.real/((Cpp.real*(Cuu.real+Cvv.real))**0.5)
+	B1 = Cpv.real/((Cpp.real*(Cuu.real+Cvv.real))**0.5)
+	A2 = (Cuu.real-Cvv.real)/(Cuu.real+Cvv.real)
+	B2 = 2*Cuv.real/(Cuu.real+Cvv.real)
+	Theta = 0.5*np.arctan2(B2,A2)*180/np.pi 
+	Dirspread = (0.5*(1-(A2*np.cos(2*Theta*np.pi/180)+B2*np.sin(2*Theta*np.pi/180))))**0.5*180/np.pi
+	Dir = np.arctan2(B1,A1)*180/np.pi
+
+	# Weighted averaging 
+	Cpu_avg = weighted_average(Cpu.real, Sp, f1)
+	Cpp_avg = weighted_average(Cpp.real, Sp, f1)
+	Cuu_avg = weighted_average(Cuu.real, Sp, f1)
+	Cvv_avg = weighted_average(Cvv.real, Sp, f1)
+	Cuv_avg = weighted_average(Cuv.real, Sp, f1)
+	Cpv_avg = weighted_average(Cpv.real, Sp, f1)
+
+	# Bulk fourier coefficients
+	A1_avg = Cpu_avg/((Cpp_avg*(Cuu_avg+Cvv_avg))**0.5)
+	B1_avg = Cpv_avg/((Cpp_avg*(Cuu_avg+Cvv_avg))**0.5)
+	A2_avg = (Cuu_avg-Cvv_avg)/(Cuu_avg+Cvv_avg)
+	B2_avg = 2*Cuv_avg/(Cuu_avg+Cvv_avg)
+	Theta_avg = 0.5*np.arctan2(B2_avg,A2_avg)*180/np.pi 
+
+	# A2, B2 estimate
+	arg1 = 2*Theta_avg*np.pi/180
+	arg2 = 2*Theta_avg*np.pi/180	
+	Dirspread_avg = (0.5*(1-(A2_avg*np.cos(arg1)+B2_avg*np.sin(arg2))))**0.5*180/np.pi
+
+	# A1, B1 estimate
+	#arg1 = Theta_avg*np.pi/180
+	#arg2 = Theta_avg*np.pi/180	
+	#Dirspread_avg = (2*(1-(A1_avg*np.cos(arg1)+B1_avg*np.sin(arg2))))**0.5*180/np.pi
+
+	Dir_avg = np.arctan2(B1_avg,A1_avg)*180/np.pi
+
+	return Dirspread_avg, Theta_avg
+
+def weighted_average(var, S, f, fmin=0.33, fmax=2.5):
+	ind = np.where((f>fmin)&(f<fmax))[0]
+	df = f[1] - f[0]
+	num = np.sum(var[ind,:]*S[ind,:], axis=0)*df
+	den = np.sum(S[ind,:], axis=0)*df 
+	return num/den

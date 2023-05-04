@@ -118,3 +118,37 @@ def Kr(alpha0, alpha):
 
 def H_shoaling(Ks, Kr, H0):
 	return H0*Ks*Kr 
+
+def make_jonswap_spectrum(Hsig, Tp, freq=np.arange(0.01,1.01,0.01), gamma=3.3):
+	"""
+	Create Jonswap spectrum code modified from Melissa Moulton:
+	 function [Sf]=create_jonswap_spectrum(Hsig,Tp,gamma);
+	  Usage: This function creates a Jonswap Spectrum on the basis of given
+	  significant wave height (Hsig), peak wave period (Tp) and peakedness parameter (gamma).
+	  Another possibility is to use the WAFO Toolbox (http://www.maths.lth.se/matstat/wafo/) which 
+	  provides a more accurate implementation of JONSWAP spectrum:
+	
+	 Nirnimesh Kumar and George Voulgaris
+	 Coastal Processes and Sediment Dynamics Lab
+	 Dept. of Earth and Ocean Sciences,
+	 Univ. of South Carolina, Columbia, SC
+	 03/06/2013
+	"""
+	g     = 9.81            # Acceleration due to gravity       
+	omegap = 2*np.pi/Tp        # Peak angular frequency
+	omega = 2*np.pi*freq       # Angular frequency
+	domega = np.diff(omega) 
+	domega = np.asarray([domega[0] for i in range(len(omega))])
+
+	sigma = np.zeros(len(freq))
+	sigma[np.where(omega>omegap)[0]] = 0.09
+	sigma[np.where(omega<=omegap)[0]] = 0.07
+
+	a = np.exp(-((omega-omegap)**2)/(2*(omegap**2)*(sigma**2)))
+	beta = 5/4 
+	Sw = (1/(omega**5))*(np.exp(-beta*(omegap**4)/(omega**4)))*(gamma**a)
+	NormFac = ((Hsig/g)**2)/16/np.sum(Sw*domega)
+
+	Sw = Sw*NormFac*g**2 
+	Sf = 2*np.pi*Sw     # Units are m^2/Hz	
+	return Sf
