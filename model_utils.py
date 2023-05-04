@@ -4,7 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import xarray as xr
 import numpy.ma as ma
-from scipy.signal import welch
+from scipy.signal import welch, csd
 from funpy import filter_functions as ff 
 import cv2
 
