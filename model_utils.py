@@ -192,7 +192,7 @@ def vel_decomposition(u, v, dx, dy):
 	phi[:,:,-1] = np.ones(phi[:,:,-1].shape)*np.expand_dims(phi_at_lx, axis=-1)
 	u_phi = np.gradient(phi.real, dx, axis=2)
 	v_phi = np.gradient(phi.real, dy, axis=1)
-	return psi, u_psi, v_psi, phi, u_phi, v_phi 
+	return u_psi, v_psi, u_phi, v_phi 
 
 def calculate_dirspread(eta, u, v, dt, lf, WL, OL):
 	# Estimation of Power and Cross Spectrum using FFT Analysis
