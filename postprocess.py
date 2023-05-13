@@ -59,7 +59,7 @@ def output2netcdf(fdir, savedir, dx, dy, dt, varname, nchunks=1):
 		fpath = os.path.join(savedir, '%s.nc' % varname)
 		funwave_to_netcdf(fdir, flist, x, y, time, fpath, varname)
 
-def uv2vorticity(fdir, savefile = 'vorticity.nc', savemask = 'vorticity_mask.nc', ufile = 'u.nc', vfile = 'v.nc', maskfile = 'mask.nc'):
+def uv2vorticity(fdir, savefile = 'vorticity.nc', ufile = 'u.nc', vfile = 'v.nc'):
 	""" Takes compiled (netcdf) u and v velocity output from FUNWAVE-TVD and computes du/dy,
 	dv/dx, averages each to get them onto the same grid, and then computes the vorticity 
 	(dv/dx - du/dy) and saves to a netcdf file. The vorticity mask will also be saved.
@@ -72,37 +72,28 @@ def uv2vorticity(fdir, savefile = 'vorticity.nc', savemask = 'vorticity_mask.nc'
 	dx = x[1]-x[0]
 	dy = y[1]-y[0]
 
-	u = u_dat['u'].values
-	dudy = np.asarray([(u[i,1:,:]-u[i,:-1,:])/dy for i in range(len(u))])
-	del u, u_dat
+	u = np.asarray(u_dat['u'])
 
 	v_dat = xr.open_dataset(os.path.join(fdir, vfile))
-	v = v_dat['v'].values
-	dvdx = np.asarray([(v[i,:,1:]-v[i,:,:-1])/dx for i in range(len(v))])
-	del v, v_dat
+	v = np.asarray(v_dat['v'])
 
-	# average in y to get dvdx on the same grid 
-	dvdx_avg = np.asarray([(dvdx[i,1:,:]+dvdx[i,:-1,:])/2 for i in range(len(dvdx))])
+	dvdx = np.gradient(v, dx, axis=2)
+	dudy = np.gradient(u, dy, axis=1)
 
-	# average in x to get dudy on the same grid
-	dudy_avg = np.asarray([(dudy[i,:,1:]+dudy[i,:,:-1])/2 for i in range(len(dudy))])
-
-	vor = dvdx_avg - dudy_avg
-	xbar = (x[1:]+x[:-1])/2
-	ybar = (y[1:]+y[:-1])/2
-	[xx,yy] = np.meshgrid(xbar, ybar)
+	vor = dvdx - dudy
 
 	dim = ["time", "y", "x"]
-	coords = [time, ybar, xbar]
+	coords = [time, y, x]
 	dat = xr.DataArray(vor, coords=coords, dims=dim, name='vorticity')
 	dat.to_netcdf(os.path.join(fdir, savefile))
 
-	## vorticity mask
-	mask = xr.open_dataset(os.path.join(fdir, maskfile))
-	mask = mask['mask'].values
-	vorticity_mask = np.asarray([mask[i,:-1,:-1]*mask[i,:-1,1:]*mask[i,1:,:-1]*mask[i,1:,1:] for i in range(len(mask))])
-	mask_dat = xr.DataArray(vorticity_mask, coords=coords, dims=dim, name='vorticity_mask')
-	mask_dat.to_netcdf(os.path.join(fdir, savemask))
+def vorticity2netcdf(fdir, nchunks=1):
+	for i in range(nchunks):
+		savefile = 'vorticity_%d.nc' % i
+		ufile = 'u_%d.nc' % i
+		vfile = 'v_%d.nc' % i
+		uv2vorticity(fdir, savefile, ufile, vfile)
+
 
 def compute_fbr(vel, name, fdir, savefile='fbr.nc', nufile='nubrk.nc', etafile='eta.nc', depfile='dep.out', dx=0.05, dy=0.1, dt=0.2):
 	dudx = np.gradient(vel, dx, axis=2)
@@ -137,6 +128,22 @@ def compute_fbr(vel, name, fdir, savefile='fbr.nc', nufile='nubrk.nc', etafile='
 	dat = xr.DataArray(fbr, coords=coords, dims=dim, name=name)
 	dat.to_netcdf(os.path.join(fdir, savefile))
 
+def fbr2netcdf(fdir, nchunks=1, dx=0.05, dy=0.1, dt=0.2):
+	for i in range(nchunks):
+		usavefile = 'fbrx_%d.nc' % i 
+		vsavefile = 'fbry_%d.nc' % i 
+		ufile = 'u_%d.nc' % i
+		vfile = 'v_%d.nc' % i
+		nufile = 'nubrk_%d.nc' % i 
+		etafile = 'eta_%d.nc' % i 
+		u = xr.open_dataset(os.path.join(fdir, ufile))['u']
+		compute_fbr(u, 'fbrx', fdir, usavefile, nufile, etafile)
+		del u 
+		v = xr.open_dataset(os.path.join(fdir, vfile))['v']
+		compute_fbr(v, 'fbry', fdir, vsavefile, nufile, etafile)
+		del v 
+
+
 def crest_identification(fdir, nufile='nubrk.nc', maskfile='mask.nc', savefile='crest.nc', threshold=0, dt=0.2):
 	x, y, nubrk = mod_utils.load_var_lab(fdir, 'nubrk', nufile, 'mask', maskfile)
 
@@ -152,5 +159,35 @@ def crest_identification(fdir, nufile='nubrk.nc', maskfile='mask.nc', savefile='
 	coords = [np.linspace(0,T*dt,T), y, x]
 	dat = xr.DataArray(labels_total, coords=coords, dims=dim, name='labels')
 	dat.to_netcdf(os.path.join(fdir, savefile))
+
+def crest2netcdf(fdir, nchunks=1, threshold=0, dt=0.2):
+	for i in range(nchunks):
+		savefile = 'crest_%d.nc' % i
+		nufile = 'nubrk_%d.nc' % i 
+		maskfile = 'mask_%d.nc' % i 
+		crest_identification(fdir, nufile=nufile, maskfile=maskfile, savefile=savefile)
+
+def veldec2netcdf(savedir, nchunks=1, dx=0.05, dy=0.1, dt=0.2):
+	for i in range(nchunks):
+	    upsifile = 'u_psi_%d.nc' % i
+	    vpsifile = 'v_psi_%d.nc' % i
+	    uphifile = 'u_phi_%d.nc' % i
+	    vphifile = 'v_phi_%d.nc' % i	
+	    u = xr.open_dataset(os.path.join(savedir, 'u_%d.nc' % i))['u']
+	    v = xr.open_dataset(os.path.join(savedir, 'v_%d.nc' % i))['v']	
+		u_psi, v_psi, u_phi, v_phi = mod_utils.vel_decomposition(u, v, dx, dy)
+		var_to_netcdf(u_psi, x, y, dt, 'u_psi', os.path.join(savedir, upsifile))
+		del u_psi 
+		var_to_netcdf(v_psi, x, y, dt, 'v_psi', os.path.join(savedir, vpsifile))
+		del v_psi
+		var_to_netcdf(u_phi, x, y, dt, 'u_phi', os.path.join(savedir, uphifile))
+		del u_phi 
+		var_to_netcdf(v_phi, x, y, dt, 'v_phi', os.path.join(savedir, vphifile))
+		del v_phi
+
+
+
+
+
 
 
