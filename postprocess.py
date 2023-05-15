@@ -175,6 +175,8 @@ def veldec2netcdf(savedir, nchunks=1, dx=0.05, dy=0.1, dt=0.2):
         vphifile = 'v_phi_%d.nc' % i    
         u = xr.open_dataset(os.path.join(savedir, 'u_%d.nc' % i))['u']
         v = xr.open_dataset(os.path.join(savedir, 'v_%d.nc' % i))['v']  
+        x = xr.open_dataset(os.path.join(savedir, 'u_%d.nc' % i))['x']
+        y = xr.open_dataset(os.path.join(savedir, 'u_%d.nc' % i))['y']        
         u_psi, v_psi, u_phi, v_phi = mod_utils.vel_decomposition(u, v, dx, dy)
         var_to_netcdf(u_psi, x, y, dt, 'u_psi', os.path.join(savedir, upsifile))
         del u_psi 
