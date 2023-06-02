@@ -11,9 +11,11 @@ import sys
 sys.path.append("/home/simon/Documents/GitHub/")
 import funpy.postprocess as fp 
 
-import pdb;pdb.set_trace()
-rundir = '/media/simon/Seagate Backup Plus Drive/metocean/R&D/SWASH_BigWaveModelling/BATHYS/MAVERICKS/funwave/'
-fdir = os.path.join(rundir,'output')
+rundir = '/media/simon/Seagate Backup Plus Drive/metocean/R&D/SWASH_BigWaveModelling/FUNWAVE/mavs/'
+fdir = os.path.join(rundir,'output270')
+fdir = os.path.join(rundir,'output290')
+# fdir = os.path.join(rundir,'output300')
+
 savedir = os.path.join(rundir, 'postprocessing', 'compiled_output')
 if not os.path.exists(savedir):os.makedirs(savedir)
 
@@ -24,18 +26,20 @@ dx = 2
 dy = 2
 dt = 1.0
 
-fp.output2netcdf(fdir, savedir, dx, dy, dt, 'eta')
-fp.output2netcdf(fdir, savedir, dx, dy, dt, 'u')
-fp.output2netcdf(fdir, savedir, dx, dy, dt, 'v')
-fp.output2netcdf(fdir, savedir, dx, dy, dt, 'mask')
-fp.output2netcdf(fdir, savedir, dx, dy, dt, 'nubrk')
+fp.output2netcdf(fdir, savedir, dx, dy, dt, ['eta','u','v','mask','nubrk'])
 
-fp.uv2vorticity(savedir)
+if False :
+    # fp.output2netcdf(fdir, savedir, dx, dy, dt, 'u')
+    # fp.output2netcdf(fdir, savedir, dx, dy, dt, 'v')
+    # fp.output2netcdf(fdir, savedir, dx, dy, dt, 'mask')
+    # fp.output2netcdf(fdir, savedir, dx, dy, dt, 'nubrk')
 
-uu = xr.open_dataset(os.path.join(savedir, 'u.nc'))['u']
-vv = xr.open_dataset(os.path.join(savedir, 'v.nc'))['v']
+    fp.uv2vorticity(savedir)
 
-fp.compute_fbr(uu, 'fbrx', fdir)
-fp.compute_fbr(vv, 'fbry', fdir)
+    uu = xr.open_dataset(os.path.join(savedir, 'u.nc'))['u']
+    vv = xr.open_dataset(os.path.join(savedir, 'v.nc'))['v']
 
-fp.crest_identification(fdir)
+    fp.compute_fbr(uu, 'fbrx', fdir)
+    fp.compute_fbr(vv, 'fbry', fdir)
+
+    fp.crest_identification(fdir)

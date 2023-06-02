@@ -30,7 +30,13 @@ def output2netcdf(fdir, savedir, dx, dy, dt, varname, nchunks=1):
     """ Compiles list of FUNWAVE-TVD text file output for a given variable,
     and uses funwave_to_netcdf to save output into a netcdf file. For file 
     size concerns, output can be saved into N netcdf files, set by nchunks.
+    
+    updated version to allow for multi variables
+    e.g. fp.output2netcdf(fdir, savedir, dx, dy, dt, ['eta','u','v','mask','nubrk'])
+
+
     """
+    import numpy.matlib as matlib
     ## load depth file and get x, y dimensions 
     depFile = os.path.join(fdir,'dep.out')
     dep = np.loadtxt(depFile)
@@ -41,23 +47,82 @@ def output2netcdf(fdir, savedir, dx, dy, dt, varname, nchunks=1):
     y = np.arange(0,n*dy,dy)
 
     # output file list
-    flist = [file for file in glob.glob(os.path.join(fdir,'%s_*' % varname))]
+    flist = [file for file in glob.glob(os.path.join(fdir,'%s_*' % varname[0]))]
     flist = sorted(flist)
     fnum = len(flist)
     time = np.arange(0,fnum)*dt 
-    if nchunks>1:
-        for i in range(nchunks):
-            N = int(len(time)/nchunks)
-            s = slice(i*N, (i+1)*N)
-            fpath = os.path.join(savedir, '%s_%d.nc' % (varname, i))
-            funwave_to_netcdf(fdir, flist[s], x, y, time[s], fpath, varname)
-        if (i+1)*N < fnum - 1:
-            s = slice((i+1)*N, fnum)
-            fpath = os.path.join(savedir, '%s_%d.nc' % (varname, i+1))
-            funwave_to_netcdf(fdir, flist[s], x, y, time[s], fpath, varname)            
-    else:
-        fpath = os.path.join(savedir, '%s.nc' % varname)
-        funwave_to_netcdf(fdir, flist, x, y, time, fpath, varname)
+    
+    # create simple xarray
+    dim = ["time", "y", "x"]
+    coords = [time, y, x]
+    # create xarray array with depth for now
+    # convert to xarray dataste
+    dat = xr.DataArray(np.tile(dep,(len(time),1,1)), coords=coords, dims=dim,name = 'depth').to_dataset()
+
+    for vv in varname:
+        # load variable data
+        var = np.zeros((len(time),len(y),len(x)))
+        flist = [file for file in glob.glob(os.path.join(fdir,'%s_*' % vv))] # load the filelist for that variable
+        for i in range(len(time)):
+            var_i = pd.read_csv(os.path.join(fdir,flist[i]), header=None, delim_whitespace=True)
+            var_i = np.asarray(var_i)
+            var[i,:,:] = var_i
+        del var_i
+        # convert to xarray data arra
+        varx  = xr.DataArray(var, coords=coords, dims=dim,name = vv)
+        dat[vv]  = varx.copy()
+        del varx
+        del var
+    # write to file in original output folder
+    dat.to_netcdf(fdir + '/OUT_PROCESSED.nc')
+    # import pdb;pdb.set_troutace()
+
+        # if nchunks>1:
+        #     for i in range(nchunks):
+        #         N = int(len(time)/nchunks)
+        #         s = slice(i*N, (i+1)*N)
+        #         fpath = os.path.join(savedir, '%s_%d.nc' % (varname, i))
+        #         funwave_to_netcdf(fdir, flist[s], x, y, time[s], fpath, varname)
+        #     if (i+1)*N < fnum - 1:
+        #         s = slice((i+1)*N, fnum)
+        #         fpath = os.path.join(savedir, '%s_%d.nc' % (varname, i+1))
+        #         funwave_to_netcdf(fdir, flist[s], x, y, time[s], fpath, varname)            
+        # else:
+        #     fpath = os.path.join(savedir, '%s.nc' % varname)
+        #     funwave_to_netcdf(fdir, flist, x, y, time, fpath, varname)
+
+# def output2netcdf(fdir, savedir, dx, dy, dt, varname, nchunks=1):
+#     """ Compiles list of FUNWAVE-TVD text file output for a given variable,
+#     and uses funwave_to_netcdf to save output into a netcdf file. For file 
+#     size concerns, output can be saved into N netcdf files, set by nchunks.
+#     """
+#     ## load depth file and get x, y dimensions 
+#     depFile = os.path.join(fdir,'dep.out')
+#     dep = np.loadtxt(depFile)
+#     [n,m] = dep.shape
+
+#     # x and y field vectors 
+#     x = np.arange(0,m*dx,dx)
+#     y = np.arange(0,n*dy,dy)
+
+#     # output file list
+#     flist = [file for file in glob.glob(os.path.join(fdir,'%s_*' % varname))]
+#     flist = sorted(flist)
+#     fnum = len(flist)
+#     time = np.arange(0,fnum)*dt 
+#     if nchunks>1:
+#         for i in range(nchunks):
+#             N = int(len(time)/nchunks)
+#             s = slice(i*N, (i+1)*N)
+#             fpath = os.path.join(savedir, '%s_%d.nc' % (varname, i))
+#             funwave_to_netcdf(fdir, flist[s], x, y, time[s], fpath, varname)
+#         if (i+1)*N < fnum - 1:
+#             s = slice((i+1)*N, fnum)
+#             fpath = os.path.join(savedir, '%s_%d.nc' % (varname, i+1))
+#             funwave_to_netcdf(fdir, flist[s], x, y, time[s], fpath, varname)            
+#     else:
+#         fpath = os.path.join(savedir, '%s.nc' % varname)
+#         funwave_to_netcdf(fdir, flist, x, y, time, fpath, varname)
 
 def uv2vorticity(fdir, savefile = 'vorticity.nc', ufile = 'u.nc', vfile = 'v.nc'):
     """ Takes compiled (netcdf) u and v velocity output from FUNWAVE-TVD and computes du/dy,
